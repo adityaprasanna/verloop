@@ -13,15 +13,20 @@ class OrgViewSet(APIView):
 
             # URL for API call
             baseURL = "https://api.github.com/user/"
-            getRepos = "/repos"
+            getRepos = "/repos?simple=yes&per_page=100&page=1"
             fullURL = baseURL + org_id + getRepos
 
             # Make GET request to Github API and retrieve all repos of org
-            allRepos = requests.get(fullURL).json()
+            allRepos = requests.get(fullURL)
+            allReposJson = allRepos.json()
+            
+            while 'next' in allRepos.links.keys():
+                allRepos=requests.get(allRepos.links['next']['url'])
+                allReposJson.extend(allRepos.json())
 
             results = []
 
-            for repo in allRepos:
+            for repo in allReposJson:
                 repoData = {
                         "name": repo["name"],
                         "stars": repo["stargazers_count"]
